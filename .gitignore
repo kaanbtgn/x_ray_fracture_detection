@@ -41,8 +41,8 @@ ENV/
 *.yaml
 *.yml
 *.log
-*.sh
 *.txt
+*.keras
 bone fracture detection.v4-v4.yolov8/
 
 # OS generated files

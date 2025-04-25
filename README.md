@@ -5,9 +5,8 @@ An advanced medical imaging analysis system that uses deep learning to detect fr
 ## Features
 
 ### 1. X-ray Analysis
-- Real-time fracture detection using deep learning
+- Real-time fracture detection using DenseNet-121 model
 - Confidence scoring and probability assessment
-- Activation heatmap visualization
 - Image quality analysis metrics
 - Pixel intensity distribution analysis
 
@@ -15,13 +14,14 @@ An advanced medical imaging analysis system that uses deep learning to detect fr
 - Detailed analysis reports with multiple visualization options
 - Image quality metrics (entropy, intensity statistics)
 - Technical metadata logging
-- Interactive visualizations using Plotly
 - Historical analysis logging and statistics
 
-### 3. Model Performance Analysis
-- Model architecture visualization
-- Training history and metrics plotting
-- Performance statistics and evaluation
+### 3. Model Training and Evaluation
+- DenseNet-121 based architecture
+- Automatic loss selection (BinaryFocalCrossentropy/BinaryCrossentropy)
+- Comprehensive training metrics (accuracy, AUC, recall, precision)
+- Early stopping and learning rate reduction
+- Mixed precision training support
 
 ## Installation
 
@@ -31,68 +31,69 @@ git clone <repository-url>
 cd xray_detection
 ```
 
-2. Run the start script:
+2. Create and activate virtual environment:
 ```bash
-chmod +x start.sh
-./start.sh
+python -m venv venv
+source venv/bin/activate  # On macOS/Linux
 ```
 
-The script will:
-- Create a Python virtual environment
-- Install all required dependencies
-- Launch the Streamlit GUI
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
 ## Requirements
 
 - Python 3.10 or higher
-- macOS with Apple Silicon (M1/M2) support
+- TensorFlow 2.19 or higher
 - Required packages are listed in `requirements.txt`
 
 ## Usage
 
-1. Launch the application:
+### Training the Model
 ```bash
-./start.sh
+./train.sh
 ```
+This will:
+- Train the DenseNet-121 model on your dataset
+- Save the best model as `xray_dense121_best.keras`
+- Generate training logs in `training.log`
 
-2. Access the GUI through your web browser at `http://localhost:8501`
-
-3. Select operation mode:
-   - **Analyse X-ray**: Upload and analyze X-ray images
-   - **View logs**: Review past analyses and statistics
-   - **Model Performance**: Examine model architecture and metrics
-
-4. For analysis:
-   - Upload an X-ray image (supported formats: PNG, JPG, JPEG)
-   - Click "Analyse" to process the image
-   - View comprehensive results in the tabbed interface
+### Running the Application
+```bash
+./run.sh
+```
+This will:
+- Launch the application
+- Access the GUI through your web browser at `http://localhost:8501`
 
 ## Project Structure
 
 ```
 xray_detection/
-├── gui.py              # Main GUI application
-├── requirements.txt    # Package dependencies
-├── start.sh           # Startup script
-├── runs/              # Model checkpoints
-└── logs/              # Analysis logs
+├── app.py                 # Main application
+├── train_eval_tf.py       # Training and evaluation script
+├── create_labels.py       # Dataset label creation utility
+├── requirements.txt       # Package dependencies
+├── train.sh              # Training script
+├── run.sh                # Application startup script
+├── README.md             # Project documentation
+├── README.dataset.txt    # Dataset information
+├── usage_instructions.txt # Usage guide
+├── static/               # Static web assets
+├── templates/            # Web templates
+├── runs/                 # Model checkpoints
+└── logs/                 # Analysis logs
 ```
 
 ## Model Information
 
-The system uses a DenseNet-based deep learning model trained on X-ray images. The model outputs:
-- Binary classification (fracture/no fracture)
-- Confidence scores
-- Activation heatmaps for interpretability
-
-## Logging
-
-Analysis results are automatically logged to `logs/inference.csv` with the following information:
-- Timestamp
-- Filename
-- Detection result
-- Confidence score
-- Image quality metrics
+The system uses a DenseNet-121 based deep learning model with the following features:
+- Pre-trained on ImageNet
+- Fine-tuned for fracture detection
+- Automatic loss selection based on class imbalance
+- Regularization: augmentation + L2 + dropout + early-stopping
+- Mixed precision training support
 
 ## Development
 
