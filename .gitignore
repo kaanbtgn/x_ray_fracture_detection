@@ -41,9 +41,10 @@ ENV/
 *.yaml
 *.yml
 *.log
-*.txt
 *.keras
 bone fracture detection.v4-v4.yolov8/
+cleanup_commands.txt
+
 
 # OS generated files
 .DS_Store

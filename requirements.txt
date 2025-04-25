@@ -1,0 +1,19 @@
+# requirements.txt  (Apple Silicon için örnek)
+tensorflow-macos==2.16.2
+tensorflow-metal==1.2.0
+
+# evrensel bölge
+numpy>=1.26          # tek satır, sabit sürüm KALDIRILDI
+pandas>=2.2
+scikit-learn>=1.4
+tqdm>=4.66
+opencv-python>=4.10
+scikit-image>=0.23
+pillow>=10.0
+click>=8.1
+python-dateutil>=2.8
+
+# FastAPI sunucu
+fastapi==0.104.1
+uvicorn==0.24.0
+python-multipart==0.0.6
