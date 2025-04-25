@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 *.so
 cleanup_commands.txt
+.gitignore
 
 # Virtual Environment
 venv_tf/
