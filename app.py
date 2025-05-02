@@ -1,49 +1,131 @@
-from fastapi import FastAPI, File, UploadFile, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+import os
+import logging
+import json
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
-import json
 from pathlib import Path
-import pandas as pd
-from sklearn.metrics import classification_report
-import matplotlib.pyplot as plt
-import seaborn as sns
-import base64
-from tensorflow.keras.applications import densenet
 
+# Initialize FastAPI app
 app = FastAPI(title="X-Ray Fracture Analyzer")
+
+# Constants
+MODEL_PATH = "models/best_model.keras"
+THRESHOLD_PATH = "models/best_threshold.txt"
+METRICS_PATH = "models/training_metrics.json"
+DEFAULT_THRESHOLD = 0.5  # Fallback threshold if optimal threshold not found
+
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Ensure required directories exist
+os.makedirs("models", exist_ok=True)
+os.makedirs("static", exist_ok=True)
+os.makedirs("templates", exist_ok=True)
 
 # Mount static files and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Global variables
- # Use Keras v3 native format to avoid “Unknown layer: Cast” errors
-MODEL_PATH = "xray_dense121_best.keras"
-model = None
-
 def load_model():
-    global model
-    if model is None:
-        model = tf.keras.models.load_model(MODEL_PATH, compile=False)
-    return model
+    """Load the trained model."""
+    try:
+        if not os.path.exists(MODEL_PATH):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Model file '{MODEL_PATH}' not found. Please train the model first."
+            )
+        return tf.keras.models.load_model(MODEL_PATH, compile=False)
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load model: {str(e)}"
+        )
+
+def load_threshold():
+    """Load the optimal threshold calculated during training."""
+    try:
+        if not os.path.exists(THRESHOLD_PATH):
+            logger.warning(f"Optimal threshold file not found at {THRESHOLD_PATH}, using default threshold")
+            return DEFAULT_THRESHOLD
+        
+        # Read the threshold value from the file
+        with open(THRESHOLD_PATH, 'r') as f:
+            threshold = float(f.read().strip())
+        
+        logger.info(f"Loaded optimal threshold from training: {threshold}")
+        return threshold
+    except Exception as e:
+        logger.error(f"Error loading threshold: {e}")
+        return DEFAULT_THRESHOLD
+
+def load_metrics():
+    """Load model training metrics."""
+    try:
+        if not os.path.exists(METRICS_PATH):
+            logger.warning(f"Metrics file not found at {METRICS_PATH}")
+            return {
+                "accuracy": "N/A",
+                "precision": "N/A",
+                "recall": "N/A",
+                "auc": "N/A",
+                "f1_score": "N/A"
+            }
+        
+        with open(METRICS_PATH, 'r') as f:
+            metrics = json.load(f)
+        
+        logger.info(f"Loaded model metrics: {metrics}")
+        return metrics
+    except Exception as e:
+        logger.error(f"Error loading metrics: {e}")
+        return {
+            "accuracy": "N/A",
+            "precision": "N/A",
+            "recall": "N/A",
+            "auc": "N/A",
+            "f1_score": "N/A"
+        }
 
 def preprocess_image(image: Image.Image):
-    # Resize and preprocess image for DenseNet
-    img = image.convert("RGB").resize((224, 224))
-    img_array = densenet.preprocess_input(np.array(img))
-    return img_array[None, ...]
+    """Preprocess image for model input."""
+    try:
+        # Resize and convert to RGB
+        img = image.convert("RGB").resize((224, 224))
+        # Convert to numpy array and normalize
+        img_array = np.array(img) / 255.0
+        # Add batch dimension
+        return img_array[None, ...]
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to preprocess image: {str(e)}"
+        )
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def root(request: Request):
+    """Serve the main page."""
+    threshold = load_threshold()
+    metrics = load_metrics()
+    logger.info(f"Current threshold value: {threshold}")
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "threshold": threshold,
+            "metrics": metrics
+        }
+    )
 
 @app.post("/analyze")
 async def analyze_xray(file: UploadFile = File(...)):
+    """Analyze X-ray image for fractures."""
     try:
         # Read and preprocess image
         contents = await file.read()
@@ -52,51 +134,54 @@ async def analyze_xray(file: UploadFile = File(...)):
         
         # Get prediction
         model = load_model()
-        prediction = model.predict(processed_image)
+        threshold = load_threshold()
+        prediction = model.predict(processed_image, verbose=0)
         probability = float(prediction[0][0])
         
         # Create result
         result = {
             "probability": probability,
-            "prediction": "Fracture" if probability >= 0.5 else "No Fracture",
-            "confidence": f"{(probability if probability >= 0.5 else 1-probability)*100:.2f}%"
+            "threshold": threshold,
+            "prediction": "Fracture" if probability >= threshold else "No Fracture",
+            "confidence": f"{(probability if probability >= threshold else 1 - probability) * 100:.2f}%"
         }
         
+        logger.info(f"Analysis result: {result}")
         return JSONResponse(content=result)
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        return JSONResponse(
+        logger.error(f"Analysis failed: {str(e)}")
+        raise HTTPException(
             status_code=500,
-            content={"error": str(e)}
+            detail=f"Analysis failed: {str(e)}"
         )
 
-@app.get("/model-performance")
-async def get_model_performance():
+@app.get("/model-info")
+async def model_info():
+    """Get model information."""
     try:
         model = load_model()
-        
-        # Get model summary
-        model_summary = []
-        model.summary(print_fn=lambda x: model_summary.append(x))
-        
-        # If you have test results saved, load them here
-        # For now, returning placeholder metrics
-        metrics = {
-            "accuracy": 0.92,
-            "precision": 0.91,
-            "recall": 0.93,
-            "f1_score": 0.92
-        }
-        
+        threshold = load_threshold()
+        metrics = load_metrics()
         return {
-            "model_summary": "\n".join(model_summary),
+            "model_type": "DenseNet121",
+            "input_shape": model.input_shape,
+            "output_shape": model.output_shape,
+            "trainable_params": model.count_params(),
+            "threshold": threshold,
+            "threshold_source": "optimal" if os.path.exists(THRESHOLD_PATH) else "default",
             "metrics": metrics
         }
+    except HTTPException as he:
+        raise he
     except Exception as e:
-        return JSONResponse(
+        logger.error(f"Failed to get model info: {str(e)}")
+        raise HTTPException(
             status_code=500,
-            content={"error": str(e)}
+            detail=f"Failed to get model info: {str(e)}"
         )
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8501)

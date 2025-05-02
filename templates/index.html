@@ -3,208 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-Ray Fracture Analyzer</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>X-Ray Fracture Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin: 20px 0;
-            cursor: pointer;
+        .drop-zone {
+            border: 2px dashed #4a5568;
+            transition: all 0.3s ease;
         }
-        .upload-area:hover {
-            border-color: #0d6efd;
-        }
-        .preview-image {
-            max-width: 100%;
-            max-height: 400px;
-            margin: 20px 0;
-        }
-        .result-card {
-            display: none;
-            margin-top: 20px;
+        .drop-zone:hover {
+            border-color: #4299e1;
+            background-color: #f7fafc;
         }
         .loading {
             display: none;
         }
+        .loading.active {
+            display: flex;
+        }
+        .metric-card {
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
     </style>
 </head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-x-ray me-2"></i>X-Ray Fracture Analyzer
-            </a>
-        </div>
-    </nav>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">X-Ray Fracture Detection</h1>
+            <p class="text-gray-600">Upload an X-ray image to detect fractures</p>
+        </header>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Upload X-Ray Image</h5>
-                        <div class="upload-area" id="dropZone">
-                            <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
-                            <p>Drag and drop your X-ray image here or click to select</p>
-                            <input type="file" id="fileInput" accept="image/*" style="display: none;">
-                        </div>
-                        <img id="preview" class="preview-image" style="display: none;">
-                        
-                        <div class="loading text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p>Analyzing image...</p>
-                        </div>
-
-                        <div class="result-card card">
-                            <div class="card-body">
-                                <h5 class="card-title">Analysis Results</h5>
-                                <div id="resultContent"></div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Model Metrics Section -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Model Performance Metrics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
+                    <h3 class="text-sm font-medium text-gray-500">Accuracy</h3>
+                    <p class="text-2xl font-bold text-blue-600">{{ metrics.accuracy }}</p>
+                </div>
+                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
+                    <h3 class="text-sm font-medium text-gray-500">Precision</h3>
+                    <p class="text-2xl font-bold text-green-600">{{ metrics.precision }}</p>
+                </div>
+                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
+                    <h3 class="text-sm font-medium text-gray-500">Recall</h3>
+                    <p class="text-2xl font-bold text-purple-600">{{ metrics.recall }}</p>
+                </div>
+                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
+                    <h3 class="text-sm font-medium text-gray-500">AUC</h3>
+                    <p class="text-2xl font-bold text-indigo-600">{{ metrics.auc }}</p>
+                </div>
+                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
+                    <h3 class="text-sm font-medium text-gray-500">F1 Score</h3>
+                    <p class="text-2xl font-bold text-pink-600">{{ metrics.f1_score }}</p>
                 </div>
             </div>
-            
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Model Performance</h5>
-                        <div id="modelMetrics">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </div>
+        </div>
+
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <!-- Upload Zone -->
+            <div id="dropZone" class="drop-zone rounded-lg p-8 text-center cursor-pointer mb-6">
+                <div class="space-y-4">
+                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="text-gray-600">
+                        <p class="text-lg">Drag and drop your X-ray image here</p>
+                        <p class="text-sm">or click to select a file</p>
+                    </div>
+                    <input type="file" id="fileInput" class="hidden" accept="image/*">
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div id="preview" class="hidden mb-6">
+                <img id="imagePreview" class="max-w-full h-auto rounded-lg shadow-md" src="" alt="X-ray preview">
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading items-center justify-center space-x-2 mb-6">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                <span class="text-gray-600">Analyzing image...</span>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="hidden space-y-4">
+                <div class="p-4 rounded-lg bg-gray-50">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Analysis Results</h3>
+                    <div class="space-y-2">
+                        <p class="text-gray-600">Prediction: <span id="prediction" class="font-semibold"></span></p>
+                        <p class="text-gray-600">Confidence: <span id="confidence" class="font-semibold"></span></p>
+                        <p class="text-gray-600">Probability: <span id="probability" class="font-semibold"></span></p>
+                        <p class="text-gray-600">Threshold: <span id="threshold" class="font-semibold">{{ threshold }}</span></p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const dropZone = document.getElementById('dropZone');
-            const fileInput = document.getElementById('fileInput');
-            const preview = document.getElementById('preview');
-            const loading = document.querySelector('.loading');
-            const resultCard = document.querySelector('.result-card');
-            const resultContent = document.getElementById('resultContent');
-            const modelMetrics = document.getElementById('modelMetrics');
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('imagePreview');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const prediction = document.getElementById('prediction');
+        const confidence = document.getElementById('confidence');
+        const probability = document.getElementById('probability');
 
-            // Handle drag and drop
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = '#0d6efd';
-            });
-
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.style.borderColor = '#ccc';
-            });
-
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.style.borderColor = '#ccc';
-                const file = e.dataTransfer.files[0];
-                handleFile(file);
-            });
-
-            dropZone.addEventListener('click', () => {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', () => {
-                const file = fileInput.files[0];
-                handleFile(file);
-            });
-
-            function handleFile(file) {
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                        analyzeImage(file);
-                    };
-                    reader.readAsDataURL(file);
-                }
-            }
-
-            async function analyzeImage(file) {
-                loading.style.display = 'block';
-                resultCard.style.display = 'none';
-
-                const formData = new FormData();
-                formData.append('file', file);
-
-                try {
-                    const response = await fetch('/analyze', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await response.json();
-                    
-                    if (response.ok) {
-                        displayResults(result);
-                    } else {
-                        throw new Error(result.error || 'Analysis failed');
-                    }
-                } catch (error) {
-                    alert('Error: ' + error.message);
-                } finally {
-                    loading.style.display = 'none';
-                }
-            }
-
-            function displayResults(result) {
-                const color = result.prediction === 'Fracture' ? 'danger' : 'success';
-                resultContent.innerHTML = `
-                    <div class="alert alert-${color}">
-                        <h4 class="alert-heading">${result.prediction}</h4>
-                        <p>Confidence: ${result.confidence}</p>
-                    </div>
-                `;
-                resultCard.style.display = 'block';
-            }
-
-            // Load model performance metrics
-            async function loadModelPerformance() {
-                try {
-                    const response = await fetch('/model-performance');
-                    const data = await response.json();
-                    
-                    modelMetrics.innerHTML = `
-                        <div class="list-group">
-                            <div class="list-group-item">
-                                <h6 class="mb-1">Accuracy</h6>
-                                <p class="mb-1">${(data.metrics.accuracy * 100).toFixed(1)}%</p>
-                            </div>
-                            <div class="list-group-item">
-                                <h6 class="mb-1">Precision</h6>
-                                <p class="mb-1">${(data.metrics.precision * 100).toFixed(1)}%</p>
-                            </div>
-                            <div class="list-group-item">
-                                <h6 class="mb-1">Recall</h6>
-                                <p class="mb-1">${(data.metrics.recall * 100).toFixed(1)}%</p>
-                            </div>
-                            <div class="list-group-item">
-                                <h6 class="mb-1">F1 Score</h6>
-                                <p class="mb-1">${(data.metrics.f1_score * 100).toFixed(1)}%</p>
-                            </div>
-                        </div>
-                    `;
-                } catch (error) {
-                    modelMetrics.innerHTML = '<div class="alert alert-danger">Error loading model metrics</div>';
-                }
-            }
-
-            loadModelPerformance();
+        // Handle drag and drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('border-blue-500');
         });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('border-blue-500');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-blue-500');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        // Handle click to upload
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please upload an image file');
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+
+            // Upload and analyze
+            uploadAndAnalyze(file);
+        }
+
+        async function uploadAndAnalyze(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            loading.classList.add('active');
+            results.classList.add('hidden');
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                // Update results
+                prediction.textContent = data.prediction;
+                confidence.textContent = data.confidence;
+                probability.textContent = `${(data.probability * 100).toFixed(2)}%`;
+                
+                // Show results
+                results.classList.remove('hidden');
+            } catch (error) {
+                alert('Error analyzing image: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html> 

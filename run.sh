@@ -1,19 +1,36 @@
-#!/usr/bin/env bash
-set -e
+#!/bin/bash
 
-# 1. Sanal ortam
-if [[ -d "venv_tf" ]]; then
-  source venv_tf/bin/activate
-elif [[ -d "venv" ]]; then
-  source venv/bin/activate
-else
-  python3 -m venv venv
-  source venv/bin/activate
+# Check if Python 3 is installed
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 is not installed. Please install Python 3 first."
+    exit 1
 fi
 
-# 2. Bağımlılıklar
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv_tf" ]; then
+    echo "🔧 Creating virtual environment..."
+    python3 -m venv venv_tf
+fi
+
+# Activate virtual environment
+echo "🔧 Activating virtual environment..."
+source venv_tf/bin/activate
+
+# Install dependencies
+echo "📦 Installing dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 3. FastAPI sunucusu
-python -m uvicorn app:app --host 0.0.0.0 --port 8501 --reload
+# Create necessary directories
+echo "📁 Creating directories..."
+mkdir -p models static templates
+
+# Check if model exists
+if [ ! -f "models/best_model.keras" ]; then
+    echo "⚠️ Warning: No trained model found at models/best_model.keras"
+    echo "   Please run ./train.sh first to train the model."
+fi
+
+# Start the server
+echo "🚀 Starting FastAPI server..."
+python app.py

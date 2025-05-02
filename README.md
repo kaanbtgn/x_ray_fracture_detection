@@ -1,107 +1,152 @@
 # X-Ray Fracture Detection System
 
-An advanced medical imaging analysis system that uses deep learning to detect fractures in X-ray images. The system provides comprehensive analysis and reporting features through an intuitive graphical interface.
+An advanced deep learning system for detecting fractures in X-ray images using DenseNet-121. The system provides real-time analysis through a modern web interface, optimized for both Apple Silicon and NVIDIA GPUs.
+
+![X-Ray Analysis Interface](docs/interface.png)
 
 ## Features
 
 ### 1. X-ray Analysis
-- Real-time fracture detection using DenseNet-121 model
-- Confidence scoring and probability assessment
-- Image quality analysis metrics
-- Pixel intensity distribution analysis
+- 🔍 Real-time fracture detection using DenseNet-121
+- 📊 Confidence scoring and probability assessment
+- 🎯 Optimal threshold calculation for accurate predictions
+- 💻 Cross-platform support (Apple Silicon and CUDA GPUs)
 
-### 2. Comprehensive Reporting
-- Detailed analysis reports with multiple visualization options
-- Image quality metrics (entropy, intensity statistics)
-- Technical metadata logging
-- Historical analysis logging and statistics
+### 2. Model Training
+- 🧠 DenseNet-121 based architecture with transfer learning
+- ⚡️ Automatic hardware detection and optimization
+- 📈 Comprehensive metrics tracking:
+  - Accuracy
+  - AUC (Area Under Curve)
+  - Precision
+  - Recall
+  - F1 Score
+- 🔄 Early stopping and learning rate reduction
+- 🔀 Data augmentation for better generalization
 
-### 3. Model Training and Evaluation
-- DenseNet-121 based architecture
-- Automatic loss selection (BinaryFocalCrossentropy/BinaryCrossentropy)
-- Comprehensive training metrics (accuracy, AUC, recall, precision)
-- Early stopping and learning rate reduction
-- Mixed precision training support
+## Prerequisites
+
+- Python 3.10 or higher
+- For Apple Silicon Macs:
+  - tensorflow-macos==2.16.1
+  - tensorflow-metal==1.1.0
+- For NVIDIA GPUs:
+  - tensorflow==2.16.1 with CUDA support
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd xray_detection
+git clone https://github.com/yourusername/xray-fracture-detection.git
+cd xray-fracture-detection
 ```
 
 2. Create and activate virtual environment:
 ```bash
-python -m venv venv
-source venv/bin/activate  # On macOS/Linux
+# On macOS/Linux
+python3 -m venv venv_tf
+source venv_tf/bin/activate
+
+# On Windows
+python -m venv venv_tf
+.\venv_tf\Scripts\activate
 ```
 
 3. Install dependencies:
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## Requirements
+## Dataset Structure
 
-- Python 3.10 or higher
-- TensorFlow 2.19 or higher
-- Required packages are listed in `requirements.txt`
+Organize your dataset in the following structure:
+```
+dataset/
+├── train/
+│   ├── images/         # Fractured X-rays
+│   └── not_fractured/  # Normal X-rays
+├── val/
+│   ├── images/
+│   └── not_fractured/
+└── test/
+    ├── images/
+    └── not_fractured/
+```
 
 ## Usage
 
 ### Training the Model
+
 ```bash
 ./train.sh
 ```
-This will:
-- Train the DenseNet-121 model on your dataset
-- Save the best model as `xray_dense121_best.keras`
-- Generate training logs in `training.log`
 
-### Running the Application
+This will:
+- 🔍 Detect your hardware (Apple Silicon/CUDA/CPU)
+- 📊 Train the model with optimal parameters
+- 💾 Save the best model to `models/best_model.keras`
+- 📈 Generate training metrics in `models/training_metrics.json`
+- 🎯 Calculate and save optimal threshold
+
+### Running the Web Interface
+
 ```bash
 ./run.sh
 ```
+
 This will:
-- Launch the application
-- Access the GUI through your web browser at `http://localhost:8501`
+- 🚀 Start the FastAPI server
+- 🌐 Launch the web interface at `http://localhost:8501`
+- 📊 Display model performance metrics
+- 🔍 Enable real-time X-ray analysis
 
 ## Project Structure
 
 ```
-xray_detection/
-├── app.py                 # Main application
-├── train_eval_tf.py       # Training and evaluation script
-├── create_labels.py       # Dataset label creation utility
-├── requirements.txt       # Package dependencies
-├── train.sh              # Training script
-├── run.sh                # Application startup script
-├── README.md             # Project documentation
-├── README.dataset.txt    # Dataset information
-├── usage_instructions.txt # Usage guide
-├── static/               # Static web assets
-├── templates/            # Web templates
-├── runs/                 # Model checkpoints
-└── logs/                 # Analysis logs
+.
+├── app.py                    # FastAPI web application
+├── train_eval_tf.py         # Training script
+├── requirements.txt         # Dependencies
+├── train.sh                # Training launcher
+├── run.sh                  # Application launcher
+├── models/                 # Saved models & metrics
+│   ├── best_model.keras
+│   ├── best_threshold.txt
+│   └── training_metrics.json
+└── templates/              # Web interface templates
+    └── index.html
 ```
 
-## Model Information
+## Model Architecture
 
-The system uses a DenseNet-121 based deep learning model with the following features:
+The system uses a fine-tuned DenseNet-121 architecture:
 - Pre-trained on ImageNet
-- Fine-tuned for fracture detection
-- Automatic loss selection based on class imbalance
-- Regularization: augmentation + L2 + dropout + early-stopping
-- Mixed precision training support
+- Custom top layers for fracture detection
+- Dropout and batch normalization for regularization
+- L2 regularization on dense layers
+- Gradient clipping for stable training
 
-## Development
+## Contributing
 
-To contribute to the project:
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-[Your chosen license]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- DenseNet-121 architecture by Huang et al.
+- TensorFlow and FastAPI communities
+- Contributors and maintainers
+
+## Contact
+
+Your Name - [@yourusername](https://twitter.com/yourusername)
+
+Project Link: [https://github.com/yourusername/xray-fracture-detection](https://github.com/yourusername/xray-fracture-detection)
