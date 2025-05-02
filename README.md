@@ -149,4 +149,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Kaan - [@kaanbtgn]
 
-Project Link: [https://github.com/kaanbtgn/xray-fracture-detection](https://github.com/kaanbtgn/xray-fracture-detection)
+Project Link: [https://github.com/kaanbtgn/x_ray_fracture_detection](https://github.com/kaanbtgn/x_ray_fracture_detection)
