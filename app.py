@@ -121,7 +121,7 @@ async def root(request: Request):
             "threshold": threshold,
             "metrics": metrics
         }
-    )
+        )
 
 @app.post("/analyze")
 async def analyze_xray(file: UploadFile = File(...)):

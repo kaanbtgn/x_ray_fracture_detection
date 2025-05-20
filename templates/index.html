@@ -5,14 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-Ray Fracture Detection</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
         .drop-zone {
             border: 2px dashed #4a5568;
             transition: all 0.3s ease;
+            background-color: #f8fafc;
         }
         .drop-zone:hover {
-            border-color: #4299e1;
-            background-color: #f7fafc;
+            border-color: #3b82f6;
+            background-color: #f0f9ff;
         }
         .loading {
             display: none;
@@ -22,82 +27,108 @@
         }
         .metric-card {
             transition: all 0.3s ease;
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
         }
         .metric-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .result-card {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 1px solid #e2e8f0;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">X-Ray Fracture Detection</h1>
-            <p class="text-gray-600">Upload an X-ray image to detect fractures</p>
-        </header>
+<body class="bg-gray-50 min-h-screen">
+    <div class="gradient-bg py-4 mb-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-4xl font-bold text-white text-center mb-2">X-Ray Fracture Detection</h1>
+            <p class="text-blue-100 text-center">Advanced AI-powered fracture detection system</p>
+        </div>
+    </div>
 
+    <div class="container mx-auto px-4 py-8">
         <!-- Model Metrics Section -->
-        <div class="max-w-4xl mx-auto mb-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Model Performance Metrics</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
-                    <h3 class="text-sm font-medium text-gray-500">Accuracy</h3>
-                    <p class="text-2xl font-bold text-blue-600">{{ metrics.accuracy }}</p>
+        <div class="max-w-6xl mx-auto mb-12">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Model Performance Metrics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                <div class="metric-card rounded-xl shadow-sm p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Accuracy</h3>
+                    <p class="text-3xl font-bold text-blue-600">{{ metrics.accuracy }}</p>
                 </div>
-                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
-                    <h3 class="text-sm font-medium text-gray-500">Precision</h3>
-                    <p class="text-2xl font-bold text-green-600">{{ metrics.precision }}</p>
+                <div class="metric-card rounded-xl shadow-sm p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Precision</h3>
+                    <p class="text-3xl font-bold text-green-600">{{ metrics.precision }}</p>
                 </div>
-                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
-                    <h3 class="text-sm font-medium text-gray-500">Recall</h3>
-                    <p class="text-2xl font-bold text-purple-600">{{ metrics.recall }}</p>
+                <div class="metric-card rounded-xl shadow-sm p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">Recall</h3>
+                    <p class="text-3xl font-bold text-purple-600">{{ metrics.recall }}</p>
                 </div>
-                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
-                    <h3 class="text-sm font-medium text-gray-500">AUC</h3>
-                    <p class="text-2xl font-bold text-indigo-600">{{ metrics.auc }}</p>
+                <div class="metric-card rounded-xl shadow-sm p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">AUC</h3>
+                    <p class="text-3xl font-bold text-indigo-600">{{ metrics.auc }}</p>
                 </div>
-                <div class="metric-card bg-white rounded-lg shadow p-4 text-center">
-                    <h3 class="text-sm font-medium text-gray-500">F1 Score</h3>
-                    <p class="text-2xl font-bold text-pink-600">{{ metrics.f1_score }}</p>
+                <div class="metric-card rounded-xl shadow-sm p-6 text-center">
+                    <h3 class="text-sm font-medium text-gray-500 mb-2">F1 Score</h3>
+                    <p class="text-3xl font-bold text-pink-600">{{ metrics.f1_score }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-            <!-- Upload Zone -->
-            <div id="dropZone" class="drop-zone rounded-lg p-8 text-center cursor-pointer mb-6">
-                <div class="space-y-4">
-                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <div class="text-gray-600">
-                        <p class="text-lg">Drag and drop your X-ray image here</p>
-                        <p class="text-sm">or click to select a file</p>
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <!-- Upload Zone -->
+                <div id="dropZone" class="drop-zone rounded-xl p-12 text-center cursor-pointer mb-8">
+                    <div class="space-y-4">
+                        <svg class="mx-auto h-16 w-16 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <div class="text-gray-600">
+                            <p class="text-xl font-medium mb-2">Drag and drop your X-ray image here</p>
+                            <p class="text-sm text-gray-500">or click to select a file</p>
+                        </div>
+                        <input type="file" id="fileInput" class="hidden" accept="image/*">
                     </div>
-                    <input type="file" id="fileInput" class="hidden" accept="image/*">
                 </div>
-            </div>
 
-            <!-- Preview -->
-            <div id="preview" class="hidden mb-6">
-                <img id="imagePreview" class="max-w-full h-auto rounded-lg shadow-md" src="" alt="X-ray preview">
-            </div>
+                <!-- Preview -->
+                <div id="preview" class="hidden mb-8">
+                    <div class="relative rounded-xl overflow-hidden shadow-lg">
+                        <img id="imagePreview" class="w-full h-auto" src="" alt="X-ray preview">
+                    </div>
+                </div>
 
-            <!-- Loading Indicator -->
-            <div id="loading" class="loading items-center justify-center space-x-2 mb-6">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                <span class="text-gray-600">Analyzing image...</span>
-            </div>
+                <!-- Loading Indicator -->
+                <div id="loading" class="loading items-center justify-center space-x-3 mb-8">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+                    <span class="text-gray-600 font-medium">Analyzing image...</span>
+                </div>
 
-            <!-- Results -->
-            <div id="results" class="hidden space-y-4">
-                <div class="p-4 rounded-lg bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Analysis Results</h3>
-                    <div class="space-y-2">
-                        <p class="text-gray-600">Prediction: <span id="prediction" class="font-semibold"></span></p>
-                        <p class="text-gray-600">Confidence: <span id="confidence" class="font-semibold"></span></p>
-                        <p class="text-gray-600">Probability: <span id="probability" class="font-semibold"></span></p>
-                        <p class="text-gray-600">Threshold: <span id="threshold" class="font-semibold">{{ threshold }}</span></p>
+                <!-- Results -->
+                <div id="results" class="hidden">
+                    <div class="result-card rounded-xl p-6 space-y-4">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Analysis Results</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-500 mb-1">Prediction</p>
+                                <p id="prediction" class="text-lg font-semibold text-gray-800"></p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-500 mb-1">Confidence</p>
+                                <p id="confidence" class="text-lg font-semibold text-gray-800"></p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-500 mb-1">Probability</p>
+                                <p id="probability" class="text-lg font-semibold text-gray-800"></p>
+                            </div>
+                            <div class="p-4 bg-gray-50 rounded-lg">
+                                <p class="text-sm text-gray-500 mb-1">Threshold</p>
+                                <p class="text-lg font-semibold text-gray-800">{{ threshold }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
