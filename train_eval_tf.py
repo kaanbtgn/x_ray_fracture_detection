@@ -57,18 +57,18 @@ def setup_hardware():
             else:
                 logger.warning("⚠️ Apple Silicon detected but no Metal GPU found")
                 return 'cpu', BATCH_SIZES['cpu']
-        
+
         # Then check for CUDA GPU
         gpus = tf.config.list_physical_devices('GPU')
-            if gpus:
+        if gpus:
             for gpu in gpus:
                 tf.config.experimental.set_memory_growth(gpu, True)
             logger.info(f"✅ CUDA GPU detected: {gpus[0].name}")
             return 'cuda', BATCH_SIZES['cuda']
-        
+
         logger.warning("⚠️ No GPU detected, using CPU")
         return 'cpu', BATCH_SIZES['cpu']
-        except Exception as e:
+    except Exception as e:
         logger.error(f"❌ Hardware setup failed: {e}")
         return 'cpu', BATCH_SIZES['cpu']
 
